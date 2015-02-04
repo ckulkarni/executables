@@ -1,0 +1,46 @@
+#!/usr/bin/ruby
+
+def findPrintlns (fileName) 
+	printStatements = `grep -nr 'println' #{fileName}`
+	if(printStatements != "") then
+		puts ("File: " + fileName)
+		printStatements.split("\n").each do |pLine| puts "\n" + pLine end
+		puts ("(c) Continue, (s) Stop")
+		p = gets.chomp
+		if(p == "s") then exit end
+	end
+end
+
+puts `git status` 
+puts "start? "
+trigger = gets.chomp
+
+if(trigger != "n" && trigger != "no") then
+	files = `git status --porcelain`
+
+	pwd = `pwd`
+
+	files.split("\n").each do | file | 
+		fileSplit = file.split(" ")
+		if(fileSplit[0] != "??") then
+			fullFile = pwd.chop! + "/" + fileSplit[1] 
+			findPrintlns(fullFile)
+			`git diff #{fullFile} &>/dev/tty`
+
+			puts "perform git (a) add (c) checkout (n) nothing"
+			action = gets.chomp
+
+			case action 
+				when "a" 
+					`git add #{fullFile}`
+				when "c"
+					`git checkout -- #{fullFile}`
+				else
+					puts("no action")
+			end
+
+			
+		end
+	end
+end
+
