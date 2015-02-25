@@ -1,13 +1,27 @@
 #!/usr/bin/ruby
 
+require 'colorize'
+
 def findPrintlns (fileName) 
+	
 	printStatements = `grep -nr 'println' #{fileName}`
+	
 	if(printStatements != "") then
 		puts ("File: " + fileName)
 		printStatements.split("\n").each do |pLine| puts "\n" + pLine end
 		puts ("(c) Continue, (s) Stop")
 		p = gets.chomp
 		if(p == "s") then exit end
+	end
+end
+
+def outputDiffResult(diffResult) 
+	diffResult.split("\n").each do |line|
+		if(line.start_with?("-")) then puts line.colorize(:red)
+		elsif line.start_with?("+") then puts line.colorize(:green)
+		elsif line.start_with?("@@") then puts line.colorize(:light_blue)
+		else puts line
+		end
 	end
 end
 
@@ -22,10 +36,12 @@ if(trigger != "n" && trigger != "no") then
 
 	files.split("\n").each do | file | 
 		fileSplit = file.split(" ")
-		if(fileSplit[0] != "??") then
-			fullFile = pwd.chop! + "/" + fileSplit[1] 
+		if(file[0] == " " && fileSplit[0] != "??" || fileSplit[0] == "MM") then
+			fullFile =  "./" + fileSplit[1] 
+			
 			findPrintlns(fullFile)
-			`git diff #{fullFile} &>/dev/tty`
+			diffResult = `git diff #{fullFile}`
+			outputDiffResult(diffResult)
 
 			puts "perform git (a) add (c) checkout (n) nothing"
 			action = gets.chomp
@@ -33,8 +49,10 @@ if(trigger != "n" && trigger != "no") then
 			case action 
 				when "a" 
 					`git add #{fullFile}`
+					puts "ADDED"
 				when "c"
 					`git checkout -- #{fullFile}`
+					puts "CHECKED OUT"
 				else
 					puts("no action")
 			end
